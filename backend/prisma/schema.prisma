@@ -23,9 +23,12 @@ model User {
   tingkatKemahiran  String              @default("pemula") @map("tingkat_kemahiran") // pemula, menengah, mahir
   createdAt         DateTime            @default(now()) @map("created_at")
 
-  submisiError      SubmisiError[]
-  polaError         PolaError[]
-  progressBelajar   ProgressBelajar[]
+  // RELATIONS COMMENTED OUT - Cosmos DB compatibility
+  // Prisma generates REMOVE operator for relations which Cosmos DB doesn't support
+  // Use manual queries with idMahasiswa foreign key instead
+  // submisiError      SubmisiError[]
+  // polaError         PolaError[]
+  // progressBelajar   ProgressBelajar[]
 
   @@map("users")
 }
@@ -47,7 +50,8 @@ model SubmisiError {
   saranLatihan       String?   @map("saran_latihan")
   createdAt          DateTime  @default(now()) @map("created_at")
 
-  mahasiswa          User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
+  // RELATION COMMENTED OUT - Cosmos DB compatibility
+  // mahasiswa          User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
 
   @@index([idMahasiswa])
   @@index([tipeError])
@@ -67,7 +71,8 @@ model PolaError {
   createdAt                DateTime  @default(now()) @map("created_at")
   updatedAt                DateTime  @updatedAt @map("updated_at")
 
-  mahasiswa                User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
+  // RELATION COMMENTED OUT - Cosmos DB compatibility
+  // mahasiswa                User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
 
   @@unique([idMahasiswa, jenisKesalahan])
   @@index([idMahasiswa])
@@ -86,7 +91,8 @@ model ProgressBelajar {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  mahasiswa            User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
+  // RELATION COMMENTED OUT - Cosmos DB compatibility
+  // mahasiswa            User      @relation(fields: [idMahasiswa], references: [id], onDelete: Cascade)
 
   @@index([idMahasiswa])
   @@map("progress_belajar")
@@ -177,7 +183,8 @@ model Exercise {
   dibuat            DateTime  @default(now())
   diperbarui        DateTime  @updatedAt @map("diperbarui")
 
-  submissions       ExerciseSubmission[]
+  // RELATION COMMENTED OUT - Cosmos DB compatibility
+  // submissions       ExerciseSubmission[]
 
   @@index([topik])
   @@map("exercises")
@@ -194,7 +201,8 @@ model ExerciseSubmission {
   feedback          String?   // AI feedback
   createdAt         DateTime  @default(now()) @map("created_at")
 
-  exercise          Exercise  @relation(fields: [idExercise], references: [id], onDelete: Cascade)
+  // RELATION COMMENTED OUT - Cosmos DB compatibility
+  // exercise          Exercise  @relation(fields: [idExercise], references: [id], onDelete: Cascade)
 
   @@index([idMahasiswa])
   @@index([idExercise])
