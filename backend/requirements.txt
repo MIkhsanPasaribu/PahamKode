@@ -7,6 +7,10 @@ uvicorn[standard]==0.40.0
 # Database - Prisma ORM (supports MongoDB/Cosmos DB)
 prisma==0.15.0
 
+# MongoDB Driver (async) - Motor untuk Cosmos DB compatibility
+motor==3.3.2
+pymongo==4.6.1
+
 # Data Validation
 pydantic==2.12.5
 pydantic-settings==2.12.0
