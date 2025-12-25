@@ -3,7 +3,9 @@
  * MENGGANTIKAN Supabase Auth dengan custom JWT-based authentication
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { dapatkanApiUrl } from "./config";
+
+const dapatkanApiUrl_Legacy = () => dapatkanApiUrl();
 
 /**
  * Interface untuk Auth Response dari backend
@@ -55,6 +57,7 @@ export const login = async (
   email: string,
   password: string
 ): Promise<ResponseAuth> => {
+  const API_URL = dapatkanApiUrl_Legacy();
   const response = await fetch(`${API_URL}/api/auth/login`, {
     method: "POST",
     headers: {
@@ -81,6 +84,7 @@ export const register = async (
   password: string,
   nama?: string
 ): Promise<ResponseAuth> => {
+  const API_URL = dapatkanApiUrl_Legacy();
   const response = await fetch(`${API_URL}/api/auth/register`, {
     method: "POST",
     headers: {
@@ -116,6 +120,7 @@ export const ambilProfilSaya = async () => {
     throw new Error("Tidak ada token, silakan login");
   }
 
+  const API_URL = dapatkanApiUrl_Legacy();
   const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,

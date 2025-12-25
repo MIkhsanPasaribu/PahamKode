@@ -23,8 +23,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Inject runtime environment variables ke window object
+  // Untuk static export Next.js, environment variables harus di-inject via script
+  const envScript = `
+    window.__ENV__ = {
+      NEXT_PUBLIC_API_URL: "${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+      }"
+    };
+  `;
+
   return (
     <html lang="id">
+      <head>
+        {/* Inject environment variables untuk runtime config */}
+        <script dangerouslySetInnerHTML={{ __html: envScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

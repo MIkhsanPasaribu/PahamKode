@@ -4,8 +4,19 @@
  */
 
 import { z } from "zod";
+import { dapatkanApiUrl } from "./config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * Helper untuk get BASE_URL secara dynamic
+ * Dipanggil setiap kali untuk ensure runtime config
+ */
+function ambilBaseUrl(): string {
+  return dapatkanApiUrl();
+}
+
+// Deprecated: Gunakan ambilBaseUrl() function daripada const BASE_URL
+// const BASE_URL akan di-replace di seluruh file
+// Template literal ${ambilBaseUrl()} akan menjadi ${ambilBaseUrl()}
 
 /**
  * Schema untuk Level Bloom's Taxonomy
@@ -99,7 +110,7 @@ export type ProgressBelajar = z.infer<typeof ProgressBelajarSchema>;
 export async function analisisError(
   data: RequestAnalisis
 ): Promise<HasilAnalisis> {
-  const response = await fetch(`${BASE_URL}/api/analyze`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -124,7 +135,7 @@ export async function dapatkanRiwayat(
   limit: number = 20
 ): Promise<RiwayatSubmisi[]> {
   const response = await fetch(
-    `${BASE_URL}/api/history/${idMahasiswa}?limit=${limit}`
+    `${ambilBaseUrl()}/api/history/${idMahasiswa}?limit=${limit}`
   );
 
   if (!response.ok) {
@@ -141,7 +152,7 @@ export async function dapatkanRiwayat(
 export async function dapatkanPolaError(
   idMahasiswa: string
 ): Promise<PolaError[]> {
-  const response = await fetch(`${BASE_URL}/api/patterns/${idMahasiswa}`);
+  const response = await fetch(`${ambilBaseUrl()}/api/patterns/${idMahasiswa}`);
 
   if (!response.ok) {
     throw new Error("Gagal mengambil pola kesalahan");
@@ -158,7 +169,7 @@ export async function dapatkanProgressBelajar(
   idMahasiswa: string
 ): Promise<ProgressBelajar[]> {
   const response = await fetch(
-    `${BASE_URL}/api/patterns/${idMahasiswa}/progress`
+    `${ambilBaseUrl()}/api/patterns/${idMahasiswa}/progress`
   );
 
   if (!response.ok) {
@@ -198,7 +209,7 @@ function dapatkanTokenAuth(): string {
 export async function dapatkanStatistikDashboard(): Promise<StatistikDashboard> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/dashboard`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/dashboard`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -224,7 +235,7 @@ export async function dapatkanListMahasiswa(
 ): Promise<MahasiswaList> {
   const token = dapatkanTokenAuth();
 
-  let url = `${BASE_URL}/api/admin/mahasiswa?halaman=${halaman}&ukuran_halaman=${ukuranHalaman}`;
+  let url = `${ambilBaseUrl()}/api/admin/mahasiswa?halaman=${halaman}&ukuran_halaman=${ukuranHalaman}`;
   if (pencarian) {
     url += `&pencarian=${encodeURIComponent(pencarian)}`;
   }
@@ -251,7 +262,7 @@ export async function dapatkanDetailMahasiswaAdmin(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/mahasiswa/${idMahasiswa}`,
+    `${ambilBaseUrl()}/api/admin/mahasiswa/${idMahasiswa}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -278,7 +289,7 @@ export async function dapatkanPolaGlobal(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/analytics/patterns-global?limit=${limit}`,
+    `${ambilBaseUrl()}/api/admin/analytics/patterns-global?limit=${limit}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -302,7 +313,7 @@ export async function dapatkanTrenAnalytics(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/analytics/trends?jumlah_hari=${jumlahHari}`,
+    `${ambilBaseUrl()}/api/admin/analytics/trends?jumlah_hari=${jumlahHari}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -327,7 +338,7 @@ export async function ubahStatusMahasiswa(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/mahasiswa/${idMahasiswa}/status`,
+    `${ambilBaseUrl()}/api/admin/mahasiswa/${idMahasiswa}/status`,
     {
       method: "PATCH",
       headers: {
@@ -352,14 +363,17 @@ export async function bulkActionMahasiswa(
 ): Promise<void> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/mahasiswa/bulk-action`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id_mahasiswa_list: idList, action }),
-  });
+  const response = await fetch(
+    `${ambilBaseUrl()}/api/admin/mahasiswa/bulk-action`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id_mahasiswa_list: idList, action }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Gagal melakukan bulk action");
@@ -372,7 +386,7 @@ export async function bulkActionMahasiswa(
 export async function dapatkanMetrikAI() {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/ai-metrics`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/ai-metrics`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -400,7 +414,7 @@ export async function tambahSumberDaya(data: {
 }) {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/resources`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/resources`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -425,7 +439,7 @@ export async function dapatkanSemuaSumberDayaAdmin(
 ) {
   const token = dapatkanTokenAuth();
 
-  let url = `${BASE_URL}/api/admin/resources?limit=${limit}`;
+  let url = `${ambilBaseUrl()}/api/admin/resources?limit=${limit}`;
   if (tipe) {
     url += `&tipe=${tipe}`;
   }
@@ -455,7 +469,7 @@ import type { DashboardMahasiswa, SumberDaya } from "@/types";
 export async function dapatkanDashboardMahasiswa(): Promise<DashboardMahasiswa> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/mahasiswa/dashboard`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/mahasiswa/dashboard`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -477,7 +491,7 @@ export async function dapatkanLearningResources(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/mahasiswa/learning-resources?limit=${limit}`,
+    `${ambilBaseUrl()}/api/mahasiswa/learning-resources?limit=${limit}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -501,7 +515,7 @@ export async function exportProgressCSV(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/mahasiswa/export/csv?periode=${periode}`,
+    `${ambilBaseUrl()}/api/mahasiswa/export/csv?periode=${periode}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -525,7 +539,7 @@ export async function exportProgressData(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/mahasiswa/export/data?periode=${periode}`,
+    `${ambilBaseUrl()}/api/mahasiswa/export/data?periode=${periode}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -560,7 +574,7 @@ export async function dapatkanTopikSulit(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/analytics/topik-sulit?limit=${limit}`,
+    `${ambilBaseUrl()}/api/admin/analytics/topik-sulit?limit=${limit}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -582,7 +596,7 @@ export async function dapatkanRekomendasiKurikulum(): Promise<RekomendasiKurikul
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/admin/analytics/rekomendasi-kurikulum`,
+    `${ambilBaseUrl()}/api/admin/analytics/rekomendasi-kurikulum`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -603,7 +617,7 @@ export async function dapatkanRekomendasiKurikulum(): Promise<RekomendasiKurikul
 export async function cekSystemHealth(): Promise<SystemHealth> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/system/health`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/system/health`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -630,7 +644,7 @@ export async function tambahTopikPembelajaran(data: {
 }): Promise<TopikPembelajaran> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/topik`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/topik`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -655,7 +669,7 @@ export async function dapatkanSemuaTopik(
 ): Promise<TopikPembelajaran[]> {
   const token = dapatkanTokenAuth();
 
-  let url = `${BASE_URL}/api/admin/topik?limit=${limit}`;
+  let url = `${ambilBaseUrl()}/api/admin/topik?limit=${limit}`;
   if (kategori) {
     url += `&kategori=${kategori}`;
   }
@@ -690,7 +704,7 @@ export async function updateTopikPembelajaran(
 ): Promise<TopikPembelajaran> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/topik/${idTopik}`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/topik/${idTopik}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -712,7 +726,7 @@ export async function updateTopikPembelajaran(
 export async function hapusTopikPembelajaran(idTopik: string): Promise<void> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/admin/topik/${idTopik}`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/admin/topik/${idTopik}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -739,7 +753,7 @@ export async function dapatkanExerciseRekomendasi(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/exercises/rekomendasi?limit=${limit}`,
+    `${ambilBaseUrl()}/api/exercises/rekomendasi?limit=${limit}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -764,7 +778,7 @@ export async function dapatkanExercisesByTopik(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/exercises/by-topik?topik=${encodeURIComponent(
+    `${ambilBaseUrl()}/api/exercises/by-topik?topik=${encodeURIComponent(
       topik
     )}&limit=${limit}`,
     {
@@ -790,7 +804,7 @@ export async function submitExercise(
 ): Promise<ExerciseSubmission> {
   const token = dapatkanTokenAuth();
 
-  const response = await fetch(`${BASE_URL}/api/exercises/submit`, {
+  const response = await fetch(`${ambilBaseUrl()}/api/exercises/submit`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -818,7 +832,7 @@ export async function dapatkanExerciseSubmissions(
   const token = dapatkanTokenAuth();
 
   const response = await fetch(
-    `${BASE_URL}/api/exercises/submissions?limit=${limit}`,
+    `${ambilBaseUrl()}/api/exercises/submissions?limit=${limit}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

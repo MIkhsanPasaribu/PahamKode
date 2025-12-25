@@ -68,7 +68,11 @@ async def buat_admin():
         print("👤 Creating admin user...")
         
         # Prepare data - hanya include field yang tidak kosong
-        user_data = {
+        # Buat user data dengan type annotation
+        from prisma.models import User
+        from typing import cast, Any
+        
+        user_data: dict[str, Any] = {
             "email": email,
             "passwordHash": hashed_password,
             "role": "admin",
@@ -80,7 +84,7 @@ async def buat_admin():
         if nama:
             user_data["nama"] = nama
         
-        admin = await prisma.user.create(data=user_data)
+        admin = await prisma.user.create(data=user_data)  # type: ignore
         
         print("\n" + "=" * 50)
         print("✅ ADMIN USER BERHASIL DIBUAT!")
