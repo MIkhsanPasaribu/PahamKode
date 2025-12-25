@@ -25,6 +25,5 @@ langchain-community==0.4.1
 
 # Authentication & Security
 python-jose[cryptography]==3.5.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.2.1  # Fixed version kompatibel dengan passlib
+bcrypt==4.2.1
 python-multipart==0.0.21
