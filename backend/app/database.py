@@ -6,24 +6,25 @@ HYBRID APPROACH:
 - Prisma (Optional): Complex queries untuk models lain
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any
 from prisma import Prisma  # type: ignore
 from app.config import settings
 import logging
 
-if TYPE_CHECKING:
-    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-
 logger = logging.getLogger(__name__)
 
 # ===== MOTOR CLIENT (PRIMARY) =====
-_motor_client: Optional["AsyncIOMotorClient"] = None
+# Note: Motor tidak punya type stubs, menggunakan Any untuk type safety
+_motor_client: Optional[Any] = None
 
 
-def dapatkan_motor_client() -> "AsyncIOMotorClient":
+def dapatkan_motor_client() -> Any:
     """
     Dapatkan Motor client singleton untuk operasi MongoDB langsung.
     Motor diperlukan karena Prisma + Cosmos DB tidak compatible (Error 17276).
+    
+    Returns:
+        AsyncIOMotorClient instance
     """
     global _motor_client
     if _motor_client is None:
@@ -42,15 +43,28 @@ def dapatkan_motor_client() -> "AsyncIOMotorClient":
     return _motor_client
 
 
-def dapatkan_database() -> "AsyncIOMotorDatabase":
-    """Dapatkan database instance dari Motor client"""
+def dapatkan_database() -> Any:
+    """
+    Dapatkan database instance dari Motor client
+    
+    Returns:
+        AsyncIOMotorDatabase instance
+    """
     client = dapatkan_motor_client()
     db_name = settings.database_url.split("/")[-1].split("?")[0]
     return client[db_name]
 
 
-def dapatkan_collection(nama_collection: str):
-    """Helper untuk mendapatkan collection dari database"""
+def dapatkan_collection(nama_collection: str) -> Any:
+    """
+    Helper untuk mendapatkan collection dari database
+    
+    Args:
+        nama_collection: Nama collection (User, SubmisiError, dll)
+    
+    Returns:
+        AsyncIOMotorCollection instance
+    """
     db = dapatkan_database()
     return db[nama_collection]
 
