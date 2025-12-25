@@ -119,17 +119,17 @@ async def dapatkan_user_lengkap(credentials: HTTPAuthCredentials = Depends(skema
         credentials: HTTP Bearer credentials dari request header
     
     Returns:
-        User: User object dari database
+        Dict: User object dari database
     
     Raises:
         HTTPException: Jika token invalid atau user tidak ditemukan
     """
-    from app.database import prisma
+    from app.repositories.user_repository import cari_user_by_id
     
     token = credentials.credentials
     user_id = verifikasi_token(token)
     
-    user = await prisma.user.find_unique(where={"id": user_id})
+    user = await cari_user_by_id(user_id)
     
     if not user:
         raise HTTPException(
@@ -148,17 +148,17 @@ async def verifikasi_admin(credentials: HTTPAuthCredentials = Depends(skema_bear
         credentials: HTTP Bearer credentials dari request header
     
     Returns:
-        User: Admin user object
+        Dict: Admin user object
     
     Raises:
         HTTPException: Jika bukan admin atau token invalid
     """
-    from app.database import prisma
+    from app.repositories.user_repository import cari_user_by_id
     
     token = credentials.credentials
     user_id = verifikasi_token(token)
     
-    user = await prisma.user.find_unique(where={"id": user_id})
+    user = await cari_user_by_id(user_id)
     
     if not user:
         raise HTTPException(
@@ -166,7 +166,7 @@ async def verifikasi_admin(credentials: HTTPAuthCredentials = Depends(skema_bear
             detail="User tidak ditemukan"
         )
     
-    if user.role != "admin":
+    if user.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Akses ditolak. Hanya admin yang dapat mengakses resource ini."
