@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[79653,["/_next/static/chunks/db6f2df4a1cadd09.js","/_next/static/chunks/745cf96711230238.js","/_next/static/chunks/aa3c9a8f1dda61c6.js"],"FormRegister"]
+3:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+4:"$Sreact.suspense"
+0:{"buildId":"Jnp7ZC8CmtrseeJ2OOZrK","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4","children":["$","div",null,{"className":"w-full max-w-md","children":[["$","div",null,{"className":"text-center mb-8","children":[["$","h1",null,{"className":"text-3xl font-bold text-gray-900 mb-2","children":["Paham",["$","span",null,{"className":"text-blue-600","children":"Kode"}]]}],["$","p",null,{"className":"text-gray-600","children":"Buat Akun Baru"}]]}],["$","$L2",null,{}]]}]}],[["$","script","script-0",{"src":"/_next/static/chunks/745cf96711230238.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/aa3c9a8f1dda61c6.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+5:null
