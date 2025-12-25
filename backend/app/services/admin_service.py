@@ -609,10 +609,9 @@ async def dapatkan_topik_sulit(limit: int = 10) -> List[Dict]:
         List topik dengan statistik kesulitan
     """
     
-    # Ambil semua progress belajar
-    all_progress = await prisma.progressbelajar.find_many(
-        include={"mahasiswa": True}
-    )
+    # Ambil semua progress belajar (tanpa include karena relation di-comment)
+    from typing import Any, cast
+    all_progress = await prisma.progressbelajar.find_many()
     
     # Group by topik
     topik_stats: Dict[str, Dict] = {}
