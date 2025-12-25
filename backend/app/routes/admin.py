@@ -195,7 +195,7 @@ async def ubah_status_mhs(
         user = await ubah_status_mahasiswa(id_mahasiswa, request.status)
         if not user:
             raise HTTPException(status_code=404, detail="Mahasiswa tidak ditemukan")
-        return {"message": f"Status mahasiswa berhasil diubah ke {request.status}", "user_id": user.id}
+        return {"message": f"Status mahasiswa berhasil diubah ke {request.status}", "user_id": user["id"]}
     except HTTPException:
         raise
     except Exception as e:
