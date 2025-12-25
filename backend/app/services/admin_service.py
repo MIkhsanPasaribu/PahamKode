@@ -4,6 +4,11 @@ Menyediakan fungsi-fungsi untuk analytics, user management, dll
 """
 
 from app.database import prisma
+from app.repositories.user_repository import (
+    hitung_user,
+    cari_user_by_id,
+    ambil_semua_user
+)
 from app.models.schemas import (
     ResponseStatistikDashboard,
     TopErrorItem,
@@ -32,18 +37,16 @@ async def dapatkan_statistik_dashboard() -> ResponseStatistikDashboard:
     """
     
     # 1. Total mahasiswa
-    total_mahasiswa = await prisma.user.count(
-        where={"role": "mahasiswa"}
-    )
+    total_mahasiswa = await hitung_user(role="mahasiswa")
     
     # 2. Pertumbuhan mahasiswa bulan ini
     awal_bulan = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    pertumbuhan_bulan_ini = await prisma.user.count(
-        where={
-            "role": "mahasiswa",
-            "createdAt": {"gte": awal_bulan}
-        }
-    )
+    from app.database import dapatkan_collection
+    users_collection = dapatkan_collection("User")
+    pertumbuhan_bulan_ini = await users_collection.count_documents({
+        "role": "mahasiswa",
+        "createdAt": {"$gte": awal_bulan}
+    })
     
     # 3. Total analisis
     total_analisis = await prisma.submisierror.count()
@@ -105,13 +108,13 @@ async def dapatkan_statistik_dashboard() -> ResponseStatistikDashboard:
     
     mahasiswa_kesulitan = []
     for mhs_id, jumlah_error in top_mahasiswa_ids:
-        mhs = await prisma.user.find_unique(where={"id": mhs_id})
+        mhs = await cari_user_by_id(mhs_id)
         if mhs:
             mahasiswa_kesulitan.append(
                 MahasiswaKesulitanItem(
-                    id=mhs.id,
-                    nama=mhs.nama,
-                    email=mhs.email,
+                    id=mhs["id"],
+                    nama=mhs.get("nama"),
+                    email=mhs["email"],
                     jumlah_error=jumlah_error
                 )
             )
@@ -146,49 +149,57 @@ async def dapatkan_semua_mahasiswa(
         ResponseMahasiswaList dengan pagination info
     """
     
-    # Build where clause
-    where_clause: Dict = {"role": "mahasiswa"}
+    # Build MongoDB filter query
+    from app.database import dapatkan_collection
+    from app.repositories.user_repository import _convert_user_doc
+    
+    users_collection = dapatkan_collection("User")
+    filter_query: Dict = {"role": "mahasiswa"}
     
     if pencarian:
-        where_clause["OR"] = [
-            {"email": {"contains": pencarian, "mode": "insensitive"}},
-            {"nama": {"contains": pencarian, "mode": "insensitive"}}
+        # MongoDB $or operator untuk search
+        import re
+        filter_query["$or"] = [
+            {"email": {"$regex": re.escape(pencarian), "$options": "i"}},
+            {"nama": {"$regex": re.escape(pencarian), "$options": "i"}}
         ]
     
-    # Total count - cast to Any untuk bypass type checking
-    from typing import Any, cast
-    total = await prisma.user.count(where=cast(Any, where_clause) if where_clause else None)
+    # Total count
+    total = await users_collection.count_documents(filter_query)
     
     # Calculate skip
     skip = (halaman - 1) * ukuran_halaman
     
-    # Fetch users
-    users = await prisma.user.find_many(
-        where=cast(Any, where_clause) if where_clause else None,
-        skip=skip,
-        take=ukuran_halaman,
-        order={"createdAt": "desc"}
-    )
+    # Fetch users dengan Motor
+    cursor = users_collection.find(filter_query).skip(skip).limit(ukuran_halaman).sort("createdAt", -1)
+    user_docs = await cursor.to_list(length=ukuran_halaman)
+    # Filter out None results
+    users = [_convert_user_doc(doc) for doc in user_docs]
+    users = [u for u in users if u is not None]
     
     # Build response dengan statistik tambahan
+    from typing import Any, cast
     mahasiswa_list = []
     for user in users:
+        if user is None:  # Type guard
+            continue
+            
         total_submisi = await prisma.submisierror.count(
-            where=cast(Any, {"idMahasiswa": user.id})
+            where=cast(Any, {"idMahasiswa": user["id"]})
         )
         
         total_pola = await prisma.polaerror.count(
-            where={"idMahasiswa": user.id}
+            where={"idMahasiswa": user["id"]}
         )
         
         mahasiswa_list.append(
             ResponseMahasiswa(
-                id=user.id,
-                email=user.email,
-                nama=user.nama,
-                role=user.role,
-                tingkat_kemahiran=user.tingkatKemahiran,
-                created_at=user.createdAt,
+                id=user["id"],
+                email=user["email"],
+                nama=user.get("nama"),
+                role=user["role"],
+                tingkat_kemahiran=user["tingkatKemahiran"],
+                created_at=user["createdAt"],
                 total_submisi=total_submisi,
                 total_pola=total_pola
             )
@@ -218,7 +229,7 @@ async def dapatkan_detail_mahasiswa(id_mahasiswa: str) -> ResponseDetailMahasisw
     """
     
     # Get user
-    user = await prisma.user.find_unique(where={"id": id_mahasiswa})
+    user = await cari_user_by_id(id_mahasiswa)
     
     if not user:
         from fastapi import HTTPException
@@ -333,12 +344,12 @@ async def dapatkan_detail_mahasiswa(id_mahasiswa: str) -> ResponseDetailMahasisw
     
     return ResponseDetailMahasiswa(
         user=ResponseMahasiswa(
-            id=user.id,
-            email=user.email,
-            nama=user.nama,
-            role=user.role,
-            tingkat_kemahiran=user.tingkatKemahiran,
-            created_at=user.createdAt,
+            id=user["id"],
+            email=user["email"],
+            nama=user.get("nama"),
+            role=user["role"],
+            tingkat_kemahiran=user["tingkatKemahiran"],
+            created_at=user["createdAt"],
             total_submisi=total_submisi,
             total_pola=total_pola_unik
         ),
@@ -390,7 +401,7 @@ async def dapatkan_pola_kesalahan_global(limit: int = 20) -> List[ResponsePolaGl
             error_data[tipe]["miskonsepsi"].append(submisi.kesenjanganKonsep)
     
     # Total mahasiswa
-    total_mahasiswa = await prisma.user.count(where={"role": "mahasiswa"})
+    total_mahasiswa = await hitung_user(role="mahasiswa")
     if total_mahasiswa == 0:
         total_mahasiswa = 1  # Avoid division by zero
     
@@ -479,19 +490,23 @@ async def ubah_status_mahasiswa(id_mahasiswa: str, status_baru: str):
         Updated user
     """
     from fastapi import HTTPException
+    from app.repositories.user_repository import update_user
     
     if status_baru not in ["aktif", "suspended"]:
         raise HTTPException(status_code=400, detail="Status harus 'aktif' atau 'suspended'")
     
-    user = await prisma.user.find_unique(where={"id": id_mahasiswa})
+    user = await cari_user_by_id(id_mahasiswa)
     if not user:
         raise HTTPException(status_code=404, detail="Mahasiswa tidak ditemukan")
     
-    updated_user = await prisma.user.update(
-        where={"id": id_mahasiswa},
-        data={"status": status_baru}
-    )
+    # Update status dengan Motor
+    success = await update_user(id_mahasiswa, {"status": status_baru})
     
+    if not success:
+        raise HTTPException(status_code=500, detail="Gagal update status")
+    
+    # Return updated user
+    updated_user = await cari_user_by_id(id_mahasiswa)
     return updated_user
 
 
@@ -507,24 +522,31 @@ async def bulk_action_mahasiswa(id_list: List[str], action: str):
         Jumlah mahasiswa yang terpengaruh
     """
     from fastapi import HTTPException
+    from app.database import dapatkan_collection
+    from bson import ObjectId
+    
+    users_collection = dapatkan_collection("User")
+    
+    # Convert string IDs ke ObjectIds
+    object_ids = [ObjectId(id_str) for id_str in id_list if ObjectId.is_valid(id_str)]
     
     if action == "suspend":
-        result = await prisma.user.update_many(
-            where={"id": {"in": id_list}},
-            data={"status": "suspended"}
+        result = await users_collection.update_many(
+            {"_id": {"$in": object_ids}},
+            {"$set": {"status": "suspended"}}
         )
-        return result
+        return {"count": result.modified_count}
     elif action == "activate":
-        result = await prisma.user.update_many(
-            where={"id": {"in": id_list}},
-            data={"status": "aktif"}
+        result = await users_collection.update_many(
+            {"_id": {"$in": object_ids}},
+            {"$set": {"status": "aktif"}}
         )
-        return result
+        return {"count": result.modified_count}
     elif action == "delete":
-        result = await prisma.user.delete_many(
-            where={"id": {"in": id_list}}
+        result = await users_collection.delete_many(
+            {"_id": {"$in": object_ids}}
         )
-        return result
+        return {"count": result.deleted_count}
     else:
         raise HTTPException(status_code=400, detail="Action tidak valid")
 
@@ -611,7 +633,7 @@ async def dapatkan_topik_sulit(limit: int = 10) -> List[Dict]:
         topik_stats[topik]["count"] += 1
     
     # Total mahasiswa
-    total_mahasiswa = await prisma.user.count(where={"role": "mahasiswa"})
+    total_mahasiswa = await hitung_user(role="mahasiswa")
     if total_mahasiswa == 0:
         total_mahasiswa = 1
     
@@ -693,7 +715,7 @@ async def dapatkan_system_health() -> Dict:
     # Test database connection
     db_start = time.time()
     try:
-        await prisma.user.count()
+        await hitung_user()  # Test Motor connection
         db_time = (time.time() - db_start) * 1000
         db_status = "healthy" if db_time < 100 else "slow"
     except Exception:
