@@ -177,23 +177,30 @@ async def dapatkan_submission_history(id_mahasiswa: str, limit: int = 20) -> Lis
     Returns:
         List submission history
     """
+    # Fetch submissions (tanpa include karena relation di-comment)
     submissions = await prisma.exercisesubmission.find_many(
         where={"idMahasiswa": id_mahasiswa},
-        include={"exercise": True},
         take=limit,
         order={"createdAt": "desc"}
     )
     
-    return [
-        {
+    # Build response dengan manual fetch exercise
+    result = []
+    for sub in submissions:
+        # Fetch exercise data manually jika perlu
+        exercise = await prisma.exercise.find_unique(
+            where={"id": sub.idExercise}
+        ) if sub.idExercise else None
+        
+        result.append({
             "id": sub.id,
             "id_exercise": sub.idExercise,
-            "exercise_judul": sub.exercise.judul if sub.exercise else "Unknown",
-            "exercise_topik": sub.exercise.topik if sub.exercise else "Unknown",
+            "exercise_judul": exercise.judul if exercise else "Unknown",
+            "exercise_topik": exercise.topik if exercise else "Unknown",
             "status_selesai": sub.statusSelesai,
             "nilai_score": sub.nilaiScore,
             "feedback": sub.feedback,
             "created_at": sub.createdAt
-        }
-        for sub in submissions
-    ]
+        })
+    
+    return result
