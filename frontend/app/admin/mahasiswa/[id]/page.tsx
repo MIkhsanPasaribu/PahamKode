@@ -24,6 +24,15 @@ import {
   Calendar,
 } from "lucide-react";
 
+/**
+ * Generate static params untuk Azure Static Web Apps
+ * Return empty array karena data mahasiswa bersifat dynamic (fetch via API client-side)
+ * Page tetap bisa diakses via browser dengan client-side routing
+ */
+export function generateStaticParams() {
+  return [];
+}
+
 export default function AdminMahasiswaDetailPage() {
   const router = useRouter();
   const params = useParams();

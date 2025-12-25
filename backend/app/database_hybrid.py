@@ -19,9 +19,12 @@ Date: 2025-12-25
 """
 
 import os
-from typing import Optional, Dict, Any
-from prisma import Prisma
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from dotenv import load_dotenv
+
+# Import Prisma hanya untuk type checking, avoid runtime error
+if TYPE_CHECKING:
+    from prisma import Prisma
 
 load_dotenv()
 
@@ -116,7 +119,21 @@ async def tutup_motor_connection():
 
 
 # ==================== PRISMA CLIENT (OPTIONAL) ====================
-prisma = Prisma()
+# Prisma instance - hanya untuk complex queries jika perlu
+_prisma: Optional["Prisma"] = None
+
+
+def dapatkan_prisma() -> Optional["Prisma"]:
+    """Dapatkan Prisma client instance (optional)"""
+    global _prisma
+    if _prisma is None:
+        try:
+            from prisma import Prisma
+            _prisma = Prisma()
+        except ImportError:
+            print("⚠️  Prisma not installed, using Motor only")
+            return None
+    return _prisma
 
 
 async def sambungkan_prisma():
@@ -126,7 +143,8 @@ async def sambungkan_prisma():
     Note: Prisma might have issues with Cosmos DB, use with caution
     """
     try:
-        if not prisma.is_connected():
+        prisma = dapatkan_prisma()
+        if prisma and not prisma.is_connected():
             await prisma.connect()
             print("✅ Prisma connected (optional mode)")
         return True
@@ -138,7 +156,8 @@ async def sambungkan_prisma():
 async def putuskan_prisma():
     """Disconnect Prisma client"""
     try:
-        if prisma.is_connected():
+        prisma = dapatkan_prisma()
+        if prisma and prisma.is_connected():
             await prisma.disconnect()
             print("✅ Prisma disconnected")
     except:
