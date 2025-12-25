@@ -43,9 +43,16 @@ class Settings(BaseSettings):
     # CORS
     frontend_url: str = "http://localhost:3000"
     
+    # Application Environment (production, development, testing)
+    environment: Optional[str] = "development"
+    
+    # Logging Level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    log_level: Optional[str] = "INFO"
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "allow"  # Allow extra fields dari .env
 
 
 # Singleton instance
