@@ -263,7 +263,8 @@ async def generate_export_data(id_mahasiswa: str, periode: str = "bulan_ini") ->
         periode_label = "Semua Waktu"
     
     # Get user data
-    user = await prisma.user.find_unique(where={"id": id_mahasiswa})
+    from app.repositories.user_repository import cari_user_by_id
+    user = await cari_user_by_id(id_mahasiswa)
     
     # Get statistics
     from typing import Any, cast
@@ -295,9 +296,9 @@ async def generate_export_data(id_mahasiswa: str, periode: str = "bulan_ini") ->
     
     return {
         "user": {
-            "nama": user.nama or user.email if user else "Unknown",
-            "email": user.email if user else "Unknown",
-            "tingkat_kemahiran": user.tingkatKemahiran if user else "pemula"
+            "nama": user.get("nama") or user["email"] if user else "Unknown",
+            "email": user["email"] if user else "Unknown",
+            "tingkat_kemahiran": user["tingkatKemahiran"] if user else "pemula"
         },
         "periode": periode_label,
         "tanggal_generate": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
