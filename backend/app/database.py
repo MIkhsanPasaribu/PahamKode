@@ -6,25 +6,28 @@ HYBRID APPROACH:
 - Prisma (Optional): Complex queries untuk models lain
 """
 
-from typing import Optional
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from typing import Optional, TYPE_CHECKING
 from prisma import Prisma  # type: ignore
 from app.config import settings
 import logging
 
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
 logger = logging.getLogger(__name__)
 
 # ===== MOTOR CLIENT (PRIMARY) =====
-_motor_client: Optional[AsyncIOMotorClient] = None
+_motor_client: Optional["AsyncIOMotorClient"] = None
 
 
-def dapatkan_motor_client() -> AsyncIOMotorClient:
+def dapatkan_motor_client() -> "AsyncIOMotorClient":
     """
     Dapatkan Motor client singleton untuk operasi MongoDB langsung.
     Motor diperlukan karena Prisma + Cosmos DB tidak compatible (Error 17276).
     """
     global _motor_client
     if _motor_client is None:
+        from motor.motor_asyncio import AsyncIOMotorClient
         database_url = settings.database_url
         _motor_client = AsyncIOMotorClient(
             database_url,
@@ -39,7 +42,7 @@ def dapatkan_motor_client() -> AsyncIOMotorClient:
     return _motor_client
 
 
-def dapatkan_database() -> AsyncIOMotorDatabase:
+def dapatkan_database() -> "AsyncIOMotorDatabase":
     """Dapatkan database instance dari Motor client"""
     client = dapatkan_motor_client()
     db_name = settings.database_url.split("/")[-1].split("?")[0]
