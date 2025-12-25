@@ -2,13 +2,9 @@
 /**
  * Runtime Configuration untuk Static Export
  *
- * Problem: Next.js static export tidak support runtime env vars
- * Solution: Baca config dari window object yang di-inject saat runtime
- *
- * Flow:
- * 1. Build time: Gunakan default values
- * 2. Runtime: Azure Static Web Apps inject env vars via staticwebapp.config.json
- * 3. Client: Baca dari window.__ENV__ atau fallback ke default
+ * UPDATED: Untuk deployment di VM yang sama dengan backend
+ * Frontend akan akses API via relative path (/api/*)
+ * Nginx akan proxy ke localhost:8000 (FastAPI)
  */
 
 interface KonfigurasiRuntime {
@@ -19,20 +15,20 @@ interface KonfigurasiRuntime {
  * Dapatkan URL API backend dengan prioritas:
  * 1. Window environment (injected by Azure)
  * 2. Build-time environment variable
- * 3. Default localhost untuk development
+ * 3. Default relative path /api (untuk same-server deployment)
  */
 export function dapatkanKonfigurasi(): KonfigurasiRuntime {
   // Runtime: Cek window object (untuk production)
   if (typeof window !== "undefined" && (window as any).__ENV__) {
     const env = (window as any).__ENV__;
     return {
-      apiUrl: env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+      apiUrl: env.NEXT_PUBLIC_API_URL || "/api",
     };
   }
 
-  // Build time / Server side: Gunakan process.env
+  // Build time / Server side: Gunakan process.env atau default
   return {
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || "/api",
   };
 }
 
