@@ -19,18 +19,20 @@ Date: 2025-12-25
 """
 
 import os
-from typing import Optional, Dict, Any
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from prisma import Prisma
 from dotenv import load_dotenv
+
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 load_dotenv()
 
 # ==================== MOTOR CLIENT (PRIMARY) ====================
-_motor_client: Optional[AsyncIOMotorClient] = None
+_motor_client: Optional["AsyncIOMotorClient"] = None
 
 
-def dapatkan_motor_client() -> AsyncIOMotorClient:
+def dapatkan_motor_client() -> "AsyncIOMotorClient":
     """
     Dapatkan Motor (async PyMongo) client singleton
     
@@ -43,6 +45,8 @@ def dapatkan_motor_client() -> AsyncIOMotorClient:
     global _motor_client
     
     if _motor_client is None:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise ValueError("DATABASE_URL tidak ditemukan di .env file")
@@ -57,7 +61,7 @@ def dapatkan_motor_client() -> AsyncIOMotorClient:
     return _motor_client
 
 
-def dapatkan_database() -> AsyncIOMotorDatabase:
+def dapatkan_database() -> "AsyncIOMotorDatabase":
     """
     Dapatkan database instance
     
@@ -68,7 +72,7 @@ def dapatkan_database() -> AsyncIOMotorDatabase:
     return client["pahamkode-db"]
 
 
-def dapatkan_collection(nama_collection: str) -> AsyncIOMotorCollection:
+def dapatkan_collection(nama_collection: str) -> "AsyncIOMotorCollection":
     """
     Dapatkan collection by name
     
