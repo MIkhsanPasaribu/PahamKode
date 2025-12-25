@@ -62,10 +62,10 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-gray-900">
             Paham<span className="text-blue-600">Kode</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-900 max-w-2xl mx-auto">
             Analisis Semantik Error Pemrograman dengan AI
           </p>
-          <p className="text-lg text-gray-500 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-800 max-w-3xl mx-auto">
             Pahami <span className="font-semibold">MENGAPA</span> error terjadi,
             bukan hanya <span className="font-semibold">APA</span> errornya
           </p>
