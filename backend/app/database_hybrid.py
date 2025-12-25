@@ -19,20 +19,18 @@ Date: 2025-12-25
 """
 
 import os
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import Optional, Dict, Any
 from prisma import Prisma
 from dotenv import load_dotenv
-
-if TYPE_CHECKING:
-    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 load_dotenv()
 
 # ==================== MOTOR CLIENT (PRIMARY) ====================
-_motor_client: Optional["AsyncIOMotorClient"] = None
+# Note: Motor tidak punya type stubs, menggunakan Any untuk type safety
+_motor_client: Optional[Any] = None
 
 
-def dapatkan_motor_client() -> "AsyncIOMotorClient":
+def dapatkan_motor_client() -> Any:
     """
     Dapatkan Motor (async PyMongo) client singleton
     
@@ -61,7 +59,7 @@ def dapatkan_motor_client() -> "AsyncIOMotorClient":
     return _motor_client
 
 
-def dapatkan_database() -> "AsyncIOMotorDatabase":
+def dapatkan_database() -> Any:
     """
     Dapatkan database instance
     
@@ -72,7 +70,7 @@ def dapatkan_database() -> "AsyncIOMotorDatabase":
     return client["pahamkode-db"]
 
 
-def dapatkan_collection(nama_collection: str) -> "AsyncIOMotorCollection":
+def dapatkan_collection(nama_collection: str) -> Any:
     """
     Dapatkan collection by name
     
