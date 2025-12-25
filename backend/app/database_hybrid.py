@@ -24,7 +24,9 @@ from dotenv import load_dotenv
 
 # Import Prisma hanya untuk type checking, avoid runtime error
 if TYPE_CHECKING:
-    from prisma import Prisma
+    from prisma import Prisma as PrismaType
+else:
+    PrismaType = Any  # Runtime placeholder
 
 load_dotenv()
 
@@ -120,10 +122,10 @@ async def tutup_motor_connection():
 
 # ==================== PRISMA CLIENT (OPTIONAL) ====================
 # Prisma instance - hanya untuk complex queries jika perlu
-_prisma: Optional["Prisma"] = None
+_prisma: Optional[Any] = None
 
 
-def dapatkan_prisma() -> Optional["Prisma"]:
+def dapatkan_prisma() -> Optional[Any]:
     """Dapatkan Prisma client instance (optional)"""
     global _prisma
     if _prisma is None:
