@@ -25,7 +25,7 @@ async def buat_admin():
         print("❌ Email tidak boleh kosong!")
         return
     
-    nama = input("Nama admin (optional): ").strip() or None
+    nama = input("Nama admin (optional): ").strip()
     
     password = getpass("Password (min 8 karakter): ")
     if len(password) < 8:
@@ -66,16 +66,21 @@ async def buat_admin():
         
         # Buat user admin
         print("👤 Creating admin user...")
-        admin = await prisma.user.create(
-            data={
-                "email": email,
-                "nama": nama,
-                "passwordHash": hashed_password,
-                "role": "admin",
-                "status": "aktif",
-                "tingkatKemahiran": "mahir"
-            }
-        )
+        
+        # Prepare data - hanya include field yang tidak kosong
+        user_data = {
+            "email": email,
+            "passwordHash": hashed_password,
+            "role": "admin",
+            "status": "aktif",
+            "tingkatKemahiran": "mahir"
+        }
+        
+        # Tambahkan nama hanya jika tidak kosong
+        if nama:
+            user_data["nama"] = nama
+        
+        admin = await prisma.user.create(data=user_data)
         
         print("\n" + "=" * 50)
         print("✅ ADMIN USER BERHASIL DIBUAT!")
