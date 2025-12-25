@@ -5,28 +5,52 @@ Utilities untuk autentikasi dan JWT
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt  # type: ignore
-from passlib.context import CryptContext  # type: ignore
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer  # type: ignore
 from fastapi.security.http import HTTPAuthorizationCredentials as HTTPAuthCredentials  # type: ignore
 
 from app.config import settings
 
-# Context untuk hashing password
-konteks_password = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # Bearer token scheme
 skema_bearer = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
-    """Hash password menggunakan bcrypt"""
-    return konteks_password.hash(password)
+    """
+    Hash password menggunakan bcrypt native
+    
+    Args:
+        password: Plain text password
+    
+    Returns:
+        str: Hashed password (bcrypt format)
+    """
+    # Generate salt dan hash password
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 def verifikasi_password(password_plain: str, password_hash: str) -> bool:
-    """Verifikasi password dengan hash"""
-    return konteks_password.verify(password_plain, password_hash)
+    """
+    Verifikasi password dengan hash menggunakan bcrypt native
+    
+    Args:
+        password_plain: Plain text password dari user
+        password_hash: Hashed password dari database
+    
+    Returns:
+        bool: True jika password cocok, False jika tidak
+    """
+    try:
+        return bcrypt.checkpw(
+            password_plain.encode('utf-8'), 
+            password_hash.encode('utf-8')
+        )
+    except (ValueError, AttributeError):
+        # Handle invalid hash format
+        return False
 
 
 def buat_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
